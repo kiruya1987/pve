@@ -1,0 +1,69 @@
+声明：爱折腾的老高视频及技术交流群仅供数码爱好者正规合法讨论技术交流。不涉及任何违法违规技术交流。请不要在评论或私聊中提及任何违法违规技术问题，一概不予回答谢谢合作。请各位朋友不在在群中讨论任何相关违法违规及风险问题，群规见群公告。所分享资源均来自互联网公开资源，均有其各自的作者和出处，尊重知识产权。相关设备和服务请购买正版。各厂商服务商请不要群内发广告、图片及二维码等。如有合作意向，敬请与老高联系：QQ 86549271
+
+如有转载或部分引用请保留老高频道及视频连接，注明出处，谢谢合作！
+
+您的订阅关注点赞分享充电打赏（三连投币分享）是对老高最大的支持和鼓励！看完片子，加爱折腾的群和讨论组：https://c1n.cn/diyforfun
+
+注意：后期可能会不断完善或者改进此文字版流程，因为视频已经无法修改了，所以以此文字版的为准。不懂的地方可以群里求助，大家互帮互助，或者群里聊天半小时自己搜索5分钟！谢谢诸位支持～
+——————————————————————————————————————————————————————————————————————
+
+一、安装：
+
+1、上传/下载OP固件至PVE—local—CT模板中，要求为rootfs的LXC专用CT模板
+koolshare rootfs固件下载地址（官网文件可能已不在，建议用迅雷下载）：https://fw0.koolcenter.com/LEDE_X64_fw867/LXC%20CT%E6%A8%A1%E6%9D%BF/openwrt-koolshare-router-v3.2-r19470-2f7d60f0e5-x86-64-generic-rootfs.tar.gz
+iStoreOS固件见官网，rootfs格式见视频评论区置顶加下QQ频道或讨论组大群中有分享。
+
+2、建容器：
+pct create 103 local:vztmpl/istoreos.rootfs.tar.gz --rootfs local-lvm:1 --ostype unmanaged --hostname Openwrt-LXC --arch amd64 --cores 1 --memory 512 --swap 0 -net0 bridge=vmbr0,name=eth0
+
+解释：
+pct create：容器创建命令
+110：容器ID，可根据自己情况设定
+local:vztmpl/openwrt-x86-64-generic-ext4-rootfs.tar.gz： 上传/下载到local—CT模板中的OP固件全名
+--rootfs：模版为rootfs文件
+local-lvm:1 ：模板安装后磁盘镜像所在（部分小伙伴可能只有1个local没有local-lvm，注意用local），冒号后数字代表分配磁盘大小（单位G）按需设置，1为1G，2为2G
+--ostype unmanaged：操作系统类型，这里没有填写指定的操作系统（不会影响）
+--hostname Openwrt-LXC：主机名（容器名称）可自定义。
+--arch amd64：设置为64位
+--cores 1：分配给容器的核心数，1：1核，2：2核等等（按需设置）
+--memory 512：分配给容器最大的内存数量（单位M）（按需设置）
+--swap 0：交换分区设置为0（按需设置）
+-net0 bridge=vmbr0,name=eth0：网卡，上桥接PVE默认虚拟网桥vmbr0，名称eth0。必须，否则op无法联网。
+
+二、设置
+
+作为旁路由使用的容器设置：
+nano /etc/pve/lxc/（容器ID）.conf
+
+进入最下面添加如下（tun设备映射，影响到如ZT等使用tun的插件）：
+lxc.cgroup2.devices.allow: c 10:200 rwm
+lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
+
+三、初始化
+
+启动OP-LXC容器
+
+vi /etc/config/network
+点i进入编辑模式
+修改IP
+点ESC——英文冒号:wq 回车保存退出
+
+service network restart 重启网络服务
+
+浏览器中输入OP-LXC的IP 登录WebUI后
+
+初始化网络接口
+1、网关（主路由）
+2、DNS（主/备2个较好）
+3、HDCP（如使用主路由DHCP，请关闭此处DHCP，同一网络内有且仅有1个DHCP服务）
+4、IPv6（按需开关，如有IPv4公网地区，可以完全关闭v6避免不必要的麻烦）
+保存并应用
+
+其他功能插件请按需设置。
+
+完工
+
+enjoy~
+
+如有转载或部分引用请保留老高频道及视频连接，注明出处，谢谢合作！
+您的订阅关注点赞分享充电打赏（三连投币分享）是对老高最大的支持和鼓励！看完片子，加爱折腾的群和讨论组：https://c1n.cn/diyforfun
